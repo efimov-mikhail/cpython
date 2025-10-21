@@ -253,11 +253,26 @@ is_unionable(PyObject *obj)
     return 0;
 }
 
+static int
+is_unionable_or_str(PyObject *obj)
+{
+    if (is_unionable(obj) ||
+        PyUnicode_Check(obj)) {
+        return 1;
+    }
+    return 0;
+}
+
 PyObject *
 _Py_union_type_or(PyObject* self, PyObject* other)
 {
+    if (!is_unionable_or_str(self) || !is_unionable_or_str(other)) {
+        Py_RETURN_NOTIMPLEMENTED;
+    }
+
     unionbuilder ub;
-    if (!unionbuilder_init(&ub, true)) {
+    // unchecked because we already checked is_unionable()
+    if (!unionbuilder_init(&ub, false)) {
         return NULL;
     }
     if (!unionbuilder_add_single(&ub, self) ||
